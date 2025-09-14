@@ -1,0 +1,62 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --primary: #FFD700;
+  --primary-light: #FFE44D;
+  --primary-dark: #B39700;
+  --secondary: #121212;
+  --secondary-light: #1E1E1E;
+  --secondary-dark: #000000;
+}
+
+body {
+  @apply bg-secondary text-primary;
+}
+
+/* Button styles */
+.btn-primary {
+  @apply bg-primary text-secondary hover:bg-primary-dark px-4 py-2 rounded-lg transition-colors;
+}
+
+.btn-secondary {
+  @apply bg-secondary text-primary hover:bg-secondary-light border border-primary px-4 py-2 rounded-lg transition-colors;
+}
+
+/* Input styles */
+.input-primary {
+  @apply bg-secondary-light text-primary border-primary focus:ring-2 focus:ring-primary rounded-lg px-4 py-2;
+}
+
+/* Card styles */
+.card {
+  @apply bg-secondary rounded-lg shadow-lg p-6 border border-primary/10;
+}
+
+/* Text styles */
+.text-title {
+  @apply text-2xl font-bold text-primary;
+}
+
+.text-subtitle {
+  @apply text-lg font-medium text-primary-dark;
+}
+
+/* Animation styles */
+.hover-effect {
+  @apply transition-transform hover:scale-105;
+}
+
+/* Custom scrollbar */
+::-webkit-scrollbar {
+  width: 8px;
+}
+
+::-webkit-scrollbar-track {
+  @apply bg-secondary-light;
+}
+
+::-webkit-scrollbar-thumb {
+  @apply bg-primary rounded-full hover:bg-primary-dark;
+}
