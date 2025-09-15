@@ -1,161 +1,49 @@
-import { useRef, useEffect } from 'react';
-import * as THREE from 'three';
-import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls';
+// components/TouristMap.jsx
+import { MapContainer, TileLayer, Marker, Popup } from "react-leaflet";
+import "leaflet/dist/leaflet.css";
+import L from "leaflet";
 
-export default function TouristMap({ tourists = [], selectedTourist = null }) {
-  const mountRef = useRef(null);
-  const rendererRef = useRef(null);
-  const sceneRef = useRef(null);
-  const controlsRef = useRef(null);
-  const animationFrameRef = useRef(null);
-  const materialsRef = useRef([]);
-  const geometriesRef = useRef([]);
+// Fix default marker icons
+delete L.Icon.Default.prototype._getIconUrl;
+L.Icon.Default.mergeOptions({
+  iconRetinaUrl:
+    "https://unpkg.com/leaflet@1.7.1/dist/images/marker-icon-2x.png",
+  iconUrl: "https://unpkg.com/leaflet@1.7.1/dist/images/marker-icon.png",
+  shadowUrl: "https://unpkg.com/leaflet@1.7.1/dist/images/marker-shadow.png",
+});
 
-  useEffect(() => {
-    if (!mountRef.current) return;
-
-    // Scene setup
-    const scene = new THREE.Scene();
-    sceneRef.current = scene;
-    
-    const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
-    const renderer = new THREE.WebGLRenderer({ 
-      antialias: true, 
-      alpha: true,
-    });
-    rendererRef.current = renderer;
-    
-    renderer.setSize(mountRef.current.clientWidth, mountRef.current.clientHeight);
-    renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
-    mountRef.current.appendChild(renderer.domElement);
-
-    // Controls
-    const controls = new OrbitControls(camera, renderer.domElement);
-    controlsRef.current = controls;
-    controls.enableDamping = true;
-    controls.enableZoom = true;
-    controls.minDistance = 2;
-    controls.maxDistance = 10;
-
-    // Create a plane to represent the map
-    const mapGeometry = new THREE.PlaneGeometry(10, 10);
-    const mapMaterial = new THREE.MeshBasicMaterial({
-      color: 0x1a1a1a,
-      side: THREE.DoubleSide,
-      transparent: true,
-      opacity: 0.3,
-    });
-    const map = new THREE.Mesh(mapGeometry, mapMaterial);
-    scene.add(map);
-
-    // Grid helper
-    const gridHelper = new THREE.GridHelper(10, 10);
-    gridHelper.rotation.x = Math.PI / 2;
-    scene.add(gridHelper);
-
-    // Create tourist markers
-    const touristGeometry = new THREE.SphereGeometry(0.1, 32, 32);
-    geometriesRef.current.push(touristGeometry);
-
-    tourists.forEach((tourist) => {
-      const color = tourist.id === selectedTourist?.id ? 0xff0000 : 0x6366f1;
-      const material = new THREE.MeshBasicMaterial({ color });
-      materialsRef.current.push(material);
-      const sphere = new THREE.Mesh(touristGeometry, material);
-      
-      // Position based on normalized coordinates
-      sphere.position.set(
-        (tourist.coordinates.x - 0.5) * 10,
-        (tourist.coordinates.y - 0.5) * 10,
-        0.1
-      );
-      
-      scene.add(sphere);
-    });
-
-    // Camera position
-    camera.position.set(0, 0, 5);
-    controls.update();
-
-    // Animation
-    const animate = () => {
-      if (!sceneRef.current || !rendererRef.current || !controlsRef.current) return;
-      
-      animationFrameRef.current = requestAnimationFrame(animate);
-      controlsRef.current.update();
-      rendererRef.current.render(sceneRef.current, camera);
-    };
-
-    animate();
-
-    // Handle resize
-    const handleResize = () => {
-      if (!mountRef.current || !rendererRef.current) return;
-      
-      camera.aspect = mountRef.current.clientWidth / mountRef.current.clientHeight;
-      camera.updateProjectionMatrix();
-      rendererRef.current.setSize(mountRef.current.clientWidth, mountRef.current.clientHeight);
-    };
-
-    window.addEventListener('resize', handleResize);
-    
-    // Initial resize
-    handleResize();
-
-    // Cleanup
-    return () => {
-      if (animationFrameRef.current) {
-        cancelAnimationFrame(animationFrameRef.current);
-      }
-
-      window.removeEventListener('resize', handleResize);
-
-      // Dispose of Three.js resources
-      if (controlsRef.current) {
-        controlsRef.current.dispose();
-      }
-
-      // Clean up geometries
-      geometriesRef.current.forEach(geometry => {
-        if (geometry) geometry.dispose();
-      });
-      geometriesRef.current = [];
-
-      // Clean up materials
-      materialsRef.current.forEach(material => {
-        if (material) material.dispose();
-      });
-      materialsRef.current = [];
-
-      // Clean up renderer
-      if (rendererRef.current) {
-        rendererRef.current.dispose();
-      }
-
-      // Remove renderer from DOM
-      if (mountRef.current && rendererRef.current) {
-        mountRef.current.removeChild(rendererRef.current.domElement);
-      }
-
-      // Clear scene
-      if (sceneRef.current) {
-        while(sceneRef.current.children.length > 0) { 
-          sceneRef.current.remove(sceneRef.current.children[0]);
-        }
-        sceneRef.current = null;
-      }
-    };
-  }, [tourists, selectedTourist]);
+export default function TouristMap({ tourists = [], selectedTourist }) {
+  const center = tourists.length
+    ? [tourists[0].coordinates.lat, tourists[0].coordinates.lng]
+    : [20.5937, 78.9629]; // Default: India center
 
   return (
-    <div 
-      ref={mountRef} 
-      className="bg-gray-900 rounded-lg shadow-lg overflow-hidden"
-      style={{ 
-        width: '100%', 
-        height: '400px',
-        position: 'relative'
-      }}
-    />
+    <MapContainer
+      center={center}
+      zoom={5}
+      style={{ height: "400px", width: "100%", borderRadius: "12px" }}
+    >
+      {/* OpenStreetMap tiles */}
+      <TileLayer
+        attribution='&copy; <a href="http://osm.org/copyright">OpenStreetMap</a>'
+        url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
+      />
+
+      {/* Tourist markers */}
+      {tourists.map((t) => (
+        <Marker
+          key={t.id}
+          position={[t.coordinates.lat, t.coordinates.lng]}
+        >
+          <Popup>
+            <strong>{t.name}</strong>
+            <br />
+            {t.address || "Fetching address..."}
+            <br />
+            Last seen: {new Date(t.lastSeen).toLocaleString()}
+          </Popup>
+        </Marker>
+      ))}
+    </MapContainer>
   );
 }

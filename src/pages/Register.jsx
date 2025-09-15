@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { getAuth, createUserWithEmailAndPassword } from 'firebase/auth';
 import logo from '../assets/Travelscape logo.png';
+import { useNavigate } from 'react-router-dom';
 import AuthBackground from '../components/AuthBackground';
 
 export default function Register() {
@@ -10,6 +11,7 @@ export default function Register() {
   const [confirmPassword, setConfirmPassword] = useState('');
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
+  const navigate = useNavigate();
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -24,6 +26,7 @@ export default function Register() {
     try {
       const auth = getAuth();
       await createUserWithEmailAndPassword(auth, email, password);
+      navigate('/dashboard');
       // Redirect will be handled by the auth observer
     } catch (error) {
       setError('Failed to create an account. ' + error.message);
