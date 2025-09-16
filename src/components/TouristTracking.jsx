@@ -57,6 +57,7 @@ export default function TouristTracking() {
           return {
             id: d.id,
             userId: loc.userId,
+            touristId: userData.touristId || "N/A", // ✅ include touristId
             name: userData.name || loc.userName,
             email: userData.email,
             contactNumber: userData.contactNumber,
@@ -81,8 +82,9 @@ export default function TouristTracking() {
   }, []);
 
   const columns = [
+    { key: "touristId", label: "Tourist ID", sortable: true }, // ✅ new column
     { key: "name", label: "Tourist Name", sortable: true },
-    { key: "address", label: "Current Address", sortable: false }, // ✅ show derived address
+    { key: "address", label: "Current Address", sortable: false },
     { key: "status", label: "Status", sortable: true },
     {
       key: "safetyScore",
@@ -190,10 +192,7 @@ export default function TouristTracking() {
             <h3 className="text-lg font-medium text-gray-900">Live Map</h3>
           </div>
           <div className="p-6">
-            <TouristMap
-              tourists={tourists}
-              selectedTourist={selectedTourist}
-            />
+            <TouristMap tourists={tourists} selectedTourist={selectedTourist} />
           </div>
         </div>
       </div>
@@ -213,8 +212,13 @@ export default function TouristTracking() {
                 ×
               </button>
             </div>
+            <div className="mt-2 mb-4">
+              <span className="px-3 py-1 bg-yellow-200 text-yellow-800 text-sm font-semibold rounded">
+                Tourist ID: {selectedTourist.touristId}
+              </span>
+            </div>
             <div className="mt-4">
-              <pre className="bg-gray-50 p-4 rounded">
+              <pre className="bg-gray-50 p-4 rounded text-sm">
                 {JSON.stringify(selectedTourist, null, 2)}
               </pre>
             </div>
